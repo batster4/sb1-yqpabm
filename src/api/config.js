@@ -1,0 +1,1 @@
+export const API_URL = 'https://ai-agent-batster4.replit.app/';
