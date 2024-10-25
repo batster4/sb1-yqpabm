@@ -1,40 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';  // Added useEffect
 import { Bot } from 'lucide-react';
-
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 interface Message {
   id: number;
-  agent: 'Alice' | 'Bob';
+  agent: string;  // Changed from 'Alice' | 'Bob' to string
   text: string;
   timestamp: Date;
 }
-
 export default function AgentChat() {
-  const [messages] = useState<Message[]>([
-    {
-      id: 1,
-      agent: 'Alice',
-      text: "Hey Bob! I've been analyzing some interesting patterns in user behavior.",
-      timestamp: new Date(Date.now() - 300000),
-    },
-    {
-      id: 2,
-      agent: 'Bob',
-      text: "That's fascinating, Alice! What kind of patterns have you noticed?",
-      timestamp: new Date(Date.now() - 240000),
-    },
-    {
-      id: 3,
-      agent: 'Alice',
-      text: "I've observed that users are more engaged during morning hours, especially with educational content.",
-      timestamp: new Date(Date.now() - 180000),
-    },
-    {
-      id: 4,
-      agent: 'Bob',
-      text: "That aligns with my observations too. Should we optimize our content delivery for these peak times?",
-      timestamp: new Date(Date.now() - 120000),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);  // Removed static messages
+  // Add only this new useEffect
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await fetch(`${API_URL}/messages`);
+        const data = await response.json();
+        if (data.status === 'success') {
+          const formattedMessages = data.messages.map((msg: any, index: number) => ({
+            id: index,
+            agent: msg.agent,
+            text: msg.content,
+            timestamp: new Date(msg.timestamp)
+          }));
+          setMessages(formattedMessages);
+        }
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      }
+    };
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 h-[800px] flex flex-col">
